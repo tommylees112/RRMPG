@@ -1,3 +1,4 @@
+from typing import Dict
 import xarray as xr 
 import pandas as pd
 import numpy as np
@@ -5,7 +6,35 @@ from pathlib import Path
 from tqdm import tqdm
 
 from scripts.utils import get_data_dir, fill_gaps, initialise_stores
-from rrmpg.models import CemaneigeGR4J, GR4J
+from rrmpg.models import GR4J
+
+
+def simulate_gr4j_for_one_station(ds: xr.Dataset, param_df: pd.DataFrame, station_id: int) -> xr.Dataset:
+    params: Dict[str, float] = param_df.loc[station_id].to_dict()
+    data = ds.sel(station_id=station_id)
+    
+    model = GR4J(params=params)
+    qsim, s_store, r_store = model.simulate(
+        prec=data["precipitation"].values, 
+        etp=data["pet"].values, 
+        s_init=0, 
+        r_init=0, 
+        return_storage=True
+    )
+    qsim = qsim.flatten().reshape(-1, 1)
+    s_store = s_store.flatten().reshape(-1, 1)
+    r_store = r_store.flatten().reshape(-1, 1)
+
+    sim_ds = xr.Dataset(
+        {
+            "gr4j": (["time", "station_id"], qsim),
+            "s_store": (["time", "station_id"], s_store),
+            "r_store": (["time", "station_id"], r_store)
+        },
+        coords={"time": ds["time"], "station_id": [station_id]}
+    )
+    return sim_ds
+
 
 
 if __name__ == "__main__":
@@ -31,12 +60,7 @@ if __name__ == "__main__":
 
     qsim_data, s_store_data, r_store_data = initialise_stores(ds)
     station_ids = ds.station_id.values
-    for ix, station_id in enumerate(tqdm(station_ids, desc="Simulating GR4J Data")):
-        params = {'x1': np.exp(5.76865628090826), 
-                  'x2': np.sinh(1.61742503661094), 
-                  'x3': np.exp(4.24316129943456), 
-                  'x4': np.exp(-0.117506799276908)+0.5}
-        
+    for ix, station_id in enumerate(tqdm(station_ids, desc="Simulating GR4J Data")):        
         # extract param dict from dataframe
         params = param_df.loc[station_id].to_dict()
         
