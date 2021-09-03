@@ -4,6 +4,7 @@ from tqdm import tqdm
 from pathlib import Path
 import numpy as np 
 from rrmpg.models import GR4J
+import pandas as pd
 
 
 def get_data_dir() -> Path:
