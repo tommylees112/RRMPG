@@ -8,7 +8,7 @@
 # You should have received a copy of the MIT License along with RRMPG. If not,
 # see <https://opensource.org/licenses/MIT>
 """Interface to the GR4J hydrological model."""
-
+from typing import Optional
 import numbers
 
 import numpy as np
@@ -73,7 +73,7 @@ class GR4J(BaseModel):
         """
         super().__init__(params=params)
         
-    def simulate(self, prec, etp, s_init=0., r_init=0., return_storage=False,
+    def simulate(self, prec, etp, s_init=0., r_init=0., return_storage=False, constant_r_store: Optional[float] = None,
                  params=None):
         """Simulate rainfall-runoff process for given input.
         
@@ -172,7 +172,8 @@ class GR4J(BaseModel):
                                                                  s_init, 
                                                                  r_init, 
                                                                  params[i])
-            
+                if constant_r_store is not None:
+                    r_store[:, i] = constant_r_store
             else:
                 qsim[:,i], _, _ = run_gr4j(prec, etp, s_init, r_init, params[i])
                 return qsim

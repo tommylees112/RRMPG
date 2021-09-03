@@ -2,6 +2,7 @@ from typing import Union, Any, List, Tuple, Optional
 import xarray as xr 
 from tqdm import tqdm
 from pathlib import Path
+import numpy as np 
 
 
 def get_data_dir() -> Path:
@@ -59,4 +60,12 @@ def fill_gaps(
     else:
         ds = _fill_gaps_da(ds, fill=fill, per_station=per_station)
     return ds
+
+def initialise_stores(ds: xr.Dataset) -> Tuple[np.ndarray]:
+    v = [v for v in ds.data_vars][0]
+    qsim_data = np.empty(ds[v].shape)
+    s_store_data = np.empty(ds[v].shape)
+    r_store_data = np.empty(ds[v].shape)
+
+    return (qsim_data, s_store_data, r_store_data)
 
