@@ -9,34 +9,6 @@ from scripts.utils import get_data_dir, fill_gaps, initialise_stores
 from rrmpg.models import GR4J
 
 
-def simulate_gr4j_for_one_station(ds: xr.Dataset, param_df: pd.DataFrame, station_id: int) -> xr.Dataset:
-    params: Dict[str, float] = param_df.loc[station_id].to_dict()
-    data = ds.sel(station_id=station_id)
-    
-    model = GR4J(params=params)
-    qsim, s_store, r_store = model.simulate(
-        prec=data["precipitation"].values, 
-        etp=data["pet"].values, 
-        s_init=0, 
-        r_init=0, 
-        return_storage=True
-    )
-    qsim = qsim.flatten().reshape(-1, 1)
-    s_store = s_store.flatten().reshape(-1, 1)
-    r_store = r_store.flatten().reshape(-1, 1)
-
-    sim_ds = xr.Dataset(
-        {
-            "gr4j": (["time", "station_id"], qsim),
-            "s_store": (["time", "station_id"], s_store),
-            "r_store": (["time", "station_id"], r_store)
-        },
-        coords={"time": ds["time"], "station_id": [station_id]}
-    )
-    return sim_ds
-
-
-
 if __name__ == "__main__":
     data_dir = get_data_dir()
     ds = xr.open_dataset(data_dir / "ALL_dynamic_ds.nc")
