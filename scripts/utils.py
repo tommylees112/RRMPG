@@ -1,8 +1,9 @@
-from typing import Union, Any, List, Tuple, Optional
+from typing import Union, Any, List, Tuple, Optional, Dict
 import xarray as xr 
 from tqdm import tqdm
 from pathlib import Path
 import numpy as np 
+from rrmpg.models import GR4J
 
 
 def get_data_dir() -> Path:
